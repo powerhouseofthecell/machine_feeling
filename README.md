@@ -24,6 +24,7 @@ The problem herein is that we want to be able to identify the unicode of emoji w
 - Please do not take this project in any way, shape, or form as a representation of all that either machine learning or computer vision are capable - this barely scratches the surface of either field
 
 
+
 -----
 
 ### Conclusion :heart:

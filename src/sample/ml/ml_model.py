@@ -22,7 +22,7 @@ from keras.layers import Dense, Dropout, AlphaDropout, GaussianNoise, LSTM
 from keras import optimizers
 
 # import our configuration variables
-from ml.config import *
+from config import *
 
 # define a decorator that makes sure we don't try to run something like a prediction without a model
 def model_required(f):
@@ -46,16 +46,15 @@ def data_required(f):
 class Model():
     # initialization of the class object
     def __init__(self, model_type='mul_class'):
-        self.available_model_types = ['mul_class']
         self.model_type = model_type
         self.model = None
 
         # if the selected model is not available, say as much
-        if not model_type in self.available_model_types:
+        if not model_type in available_model_types:
             print(
                 '[-] Invalid model type input - {} - please use one of the following: {}'.format(
                     model_type,
-                    ' '.join([ x for x in self.available_model_types ])
+                    ' '.join([ x for x in available_model_types ])
                 )
             )
 
@@ -70,16 +69,11 @@ class Model():
             print('[-] Model loading unsuccessful, please check your model file:')
             print(err)
 
-    # TODO: finish the method for preprocessing data (specifically image data)
-    def preprocess(self):
-        pass
-
     # a method for loading in the data given path (and many optional arguments)
     # note, this data path should point to a folder with the data
     def load_data(self, data_path, data_type='img'):
         # check that the data exists and has two subfolders, 'test' and 'train'
         if os.path.isdir(data_path) and os.path.isdir(data_path + '/train/') and os.path.isdir(data_path + '/test/'):
-            # TODO: properly load data for images
             if data_type == 'img':
                 # for images, we can increase the size/variety of our data set using generators, courtesy of Keras
                 # TODO: pull these params from config
@@ -96,7 +90,7 @@ class Model():
 
                 test_gen = ImageDataGenerator(rescale=1./255)
 
-                # TODO: pull these params from config
+                # uses the generator to make data, uses parameters from config
                 self.train_data = train_gen.flow_from_directory(
                     data_path + '/train/',
                     target_size=(target_dim1, target_dim2),
@@ -118,25 +112,6 @@ class Model():
 
         else:
             print('[-] The path provided is not a folder containing "train" and "test" or does not exist, please try again.')
-        
-        # TODO: load image data
-        if self.model_type == 'lstm':
-            if shuffle:
-                np.random.shuffle(self.dataset)
-
-            if proportion >= 1.0:
-                proportion = 0.95
-
-            row_cutoff = int(round(len(self.dataset) * proportion))
-
-            train_data = self.dataset[:row_cutoff, :]
-            test_data = self.dataset[row_cutoff:, :]
-            
-            # TODO: likely, these will need redoing
-            self.train_input, self.train_ans = None, None #convert_raw_sequence(train_data, sequence_length=sequence_length)
-            self.test_input, self.test_ans = None, None #convert_raw_sequence(test_data, sequence_length=sequence_length)
-
-            print('[+] Data successfully prepared')
     
     # method for building the actual model
     # TODO: build from vars pulled from config if they exist, else default
@@ -144,7 +119,8 @@ class Model():
         # define the model type, from Keras
         model = Sequential()
 
-        # TODO: modify to make parsimonious else use config
+        # TODO: modify to make parsimonious
+        # TODO: modify to allow for config use
         if self.model_type == 'mul_class':
             model.add(Conv2D(32, filter_dim, input_shape=(target_dim1, target_dim2, 3)))
             model.add(Activation(input_activation))
@@ -152,56 +128,22 @@ class Model():
             
             model.add(Flatten())
 
-            model.add(Dense(16))
+            model.add(Dense(64))
             model.add(Activation('relu'))
             model.add(Dropout(0.7))
 
-            if random_params:
-                import random
-                self.extra_layers_num = random.randint(0, 50)
-                self.extra_layers_nodes = (list(), list(), list())
-                for x in range(self.extra_layers_num):
-                    nodes = random.choice([2, 4, 8, 16, 32, 64, 128])
-                    act = random.choice(['sigmoid', 'relu', 'linear', 'tanh'])
-                    self.extra_layers_nodes[0].append(nodes)
-                    self.extra_layers_nodes[1].append(act)
-    
-                    model.add(Dense(
-                        nodes,
-                        activation=act
-                        ))
-
-                    if random.randint(0, 1) == 1:
-                        self.extra_layers_nodes[2].append('Noise added')
-                        
-                        model.add(
-                            random.choice([
-                                Dropout(random.random()),
-                                GaussianNoise(random.random()),
-                                AlphaDropout(random.random())
-                            ])
-                        )
-
             model.add(Dense(1))
-	        model.add(Activation('sigmoid'))
+	        model.add(Activation(output_activation))
         
             # a "begin" marker to time how long it takes (in real time) to compile
             start_compile = d.now()
 
-            # TODO: maybe remove random_params
-            if random_params:
-                self.random_optimizer = random.choice(['rmsprop', 'adagrad', 'adadelta', 'adam', 'nadam', 'adamax'])
-                model.compile(
-                    loss='mse',
-                    optimizer=self.random_optimizer,
-                    metrics=['mape']
-                )
-            else:
-                model.compile(
-                    loss=(classification_type + '_crossentropy'),
-                    optimizer='adam',
-                    metrics=['accuracy']
-                )
+            # actually compile the model
+            model.compile(
+                loss=l_type,
+                optimizer=opt,
+                metrics=met
+            )
 
             # a calculation of the compile time, in seconds
             compile_time = (d.now() - start_compile).total_seconds()
@@ -214,7 +156,7 @@ class Model():
     # a method for actually training the model on the supplied data
     @model_required
     @data_required
-    def train(self, batch_size, epochs):
+    def train(self):
         try:
             # again, a variable for timing
             fit_start = d.now()
@@ -223,10 +165,10 @@ class Model():
             # TODO: modify for images, and possibly config?
             self.model.fit_generator(
                 self.train_data,
-                steps_per_epoch=600 // batch_size,
-                epochs=num_epochs,
-                validation_data=test_data,
-                validation_steps=600 // batch_size
+                steps_per_epoch=step_num // batch_size,
+                epochs=epoch_num,
+                validation_data=self.test_data,
+                validation_steps=step_num // batch_size
             )
 
             # another time calculation, but for fitting, in seconds

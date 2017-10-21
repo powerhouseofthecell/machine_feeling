@@ -1,0 +1,292 @@
+import os
+import numpy as np
+import pandas as pd
+from datetime import datetime as d
+
+#######################################################################
+################ THE MACHINE LEARNING MODEL CLASS #####################
+#######################################################################
+#### Feel free to play around with how this class is built as you  ####
+#### see fit. It was designed as a wrapper around Keras' nice,     ####
+#### built-in classes, in order to provide an extremely high level ####
+#### interface. If there are things you wish to modify, feel free. ####
+#######################################################################
+
+# will hide TF warnings, comment or remove to have those warnings back
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+# import the pieces from keras to make the model work
+from keras.preprocessing.image import ImageDataGenerator
+from keras.models import Sequential, load_model
+from keras.layers import Dense, Dropout, AlphaDropout, GaussianNoise, LSTM
+from keras import optimizers
+
+# import our configuration variables
+from ml.config import *
+
+# define a decorator that makes sure we don't try to run something like a prediction without a model
+def model_required(f):
+    def wrapper(*args, **kwargs):
+        if args[0].model:
+            f(*args, **kwargs)
+        else:
+            print('[-] Please compile the model using the "build_model" method before attempting this')
+    return wrapper
+
+# also a decorator, makes sure we don't try to train a model without data
+def data_required(f):
+    def wrapper(*args, **kwargs):
+        if args[0].train_input.all() and args[0].test_input.all() and args[0].train_ans.all() and args[0].test_ans.all():
+            f(*args, **kwargs)
+        else:
+            print('[-] Please load data using the "load_data" method before attempting this')
+    return wrapper
+
+# the class definition
+class Model():
+    # initialization of the class object
+    def __init__(self, model_type='mul_class'):
+        self.available_model_types = ['mul_class']
+        self.model_type = model_type
+        self.model = None
+
+        # if the selected model is not available, say as much
+        if not model_type in self.available_model_types:
+            print(
+                '[-] Invalid model type input - {} - please use one of the following: {}'.format(
+                    model_type,
+                    ' '.join([ x for x in self.available_model_types ])
+                )
+            )
+
+    # a method for loading the model if it has already been created and saved
+    def load_model(self, model_path):
+        try:
+            if os.path.isfile(model_path):
+                self.model = load_model(model_path)
+                print('[+] Model loading complete')
+
+        except Exception as err:
+            print('[-] Model loading unsuccessful, please check your model file:')
+            print(err)
+
+    # TODO: finish the method for preprocessing data (specifically image data)
+    def preprocess(self):
+        pass
+
+    # a method for loading in the data given path (and many optional arguments)
+    # note, this data path should point to a folder with the data
+    def load_data(self, data_path, data_type='img'):
+        # check that the data exists and has two subfolders, 'test' and 'train'
+        if os.path.isdir(data_path) and os.path.isdir(data_path + '/train/') and os.path.isdir(data_path + '/test/'):
+            # TODO: properly load data for images
+            if data_type == 'img':
+                # for images, we can increase the size/variety of our data set using generators, courtesy of Keras
+                # TODO: pull these params from config
+                train_gen = ImageDataGenerator(
+                    rotation_range=rot_range,
+                    width_shift_range=w_shift,
+                    height_shift_range=h_shift,
+                    rescale=1./255,
+                    shear_range=shear,
+                    fill_mode='nearest', 
+                    horizontal_flip=h_flip,
+                    vertical_flip=v_flip
+                )
+
+                test_gen = ImageDataGenerator(rescale=1./255)
+
+                # TODO: pull these params from config
+                self.train_data = train_gen.flow_from_directory(
+                    data_path + '/train/',
+                    target_size=(target_dim1, target_dim2),
+                    batch_size=batch_size,
+                    class_mode=classification_type
+                )
+
+                self.test_data = test_gen.flow_from_directory(
+                    data_path + '/test/',
+                    target_size=(target_dim1, target_dim2),
+                    batch_size=batch_size,
+                    class_mode=classification_type
+                )
+
+                print('[+] Data successfully loaded')
+
+            else:
+                print('[-] Datatype {} not yet supported.'.format(str(data_type)))
+
+        else:
+            print('[-] The path provided is not a folder containing "train" and "test" or does not exist, please try again.')
+        
+        # TODO: load image data
+        if self.model_type == 'lstm':
+            if shuffle:
+                np.random.shuffle(self.dataset)
+
+            if proportion >= 1.0:
+                proportion = 0.95
+
+            row_cutoff = int(round(len(self.dataset) * proportion))
+
+            train_data = self.dataset[:row_cutoff, :]
+            test_data = self.dataset[row_cutoff:, :]
+            
+            # TODO: likely, these will need redoing
+            self.train_input, self.train_ans = None, None #convert_raw_sequence(train_data, sequence_length=sequence_length)
+            self.test_input, self.test_ans = None, None #convert_raw_sequence(test_data, sequence_length=sequence_length)
+
+            print('[+] Data successfully prepared')
+    
+    # method for building the actual model
+    # TODO: build from vars pulled from config if they exist, else default
+    def build_model(self):
+        # define the model type, from Keras
+        model = Sequential()
+
+        # TODO: modify to make parsimonious else use config
+        if self.model_type == 'mul_class':
+            model.add(Conv2D(32, filter_dim, input_shape=(target_dim1, target_dim2, 3)))
+            model.add(Activation(input_activation))
+            model.add(MaxPooling2D(pool_size=(2, 2)))
+            
+            model.add(Flatten())
+
+            model.add(Dense(16))
+            model.add(Activation('relu'))
+            model.add(Dropout(0.7))
+
+            if random_params:
+                import random
+                self.extra_layers_num = random.randint(0, 50)
+                self.extra_layers_nodes = (list(), list(), list())
+                for x in range(self.extra_layers_num):
+                    nodes = random.choice([2, 4, 8, 16, 32, 64, 128])
+                    act = random.choice(['sigmoid', 'relu', 'linear', 'tanh'])
+                    self.extra_layers_nodes[0].append(nodes)
+                    self.extra_layers_nodes[1].append(act)
+    
+                    model.add(Dense(
+                        nodes,
+                        activation=act
+                        ))
+
+                    if random.randint(0, 1) == 1:
+                        self.extra_layers_nodes[2].append('Noise added')
+                        
+                        model.add(
+                            random.choice([
+                                Dropout(random.random()),
+                                GaussianNoise(random.random()),
+                                AlphaDropout(random.random())
+                            ])
+                        )
+
+            model.add(Dense(1))
+	        model.add(Activation('sigmoid'))
+        
+            # a "begin" marker to time how long it takes (in real time) to compile
+            start_compile = d.now()
+
+            # TODO: maybe remove random_params
+            if random_params:
+                self.random_optimizer = random.choice(['rmsprop', 'adagrad', 'adadelta', 'adam', 'nadam', 'adamax'])
+                model.compile(
+                    loss='mse',
+                    optimizer=self.random_optimizer,
+                    metrics=['mape']
+                )
+            else:
+                model.compile(
+                    loss=(classification_type + '_crossentropy'),
+                    optimizer='adam',
+                    metrics=['accuracy']
+                )
+
+            # a calculation of the compile time, in seconds
+            compile_time = (d.now() - start_compile).total_seconds()
+
+            self.model = model
+
+            print('[+] Model successfully compiled in {:.3f} seconds'.format(compile_time))
+
+
+    # a method for actually training the model on the supplied data
+    @model_required
+    @data_required
+    def train(self, batch_size, epochs):
+        try:
+            # again, a variable for timing
+            fit_start = d.now()
+
+            # fit the model to the data
+            # TODO: modify for images, and possibly config?
+            self.model.fit_generator(
+                self.train_data,
+                steps_per_epoch=600 // batch_size,
+                epochs=num_epochs,
+                validation_data=test_data,
+                validation_steps=600 // batch_size
+            )
+
+            # another time calculation, but for fitting, in seconds
+            fit_time = (d.now() - fit_start).total_seconds() / 60
+
+            print('[+] Training completed in {:.3f} minutes'.format(fit_time))
+
+        except KeyboardInterrupt:
+            print('User aborted...')
+
+    # a method for evaulating the model on data, using a subset of original data that was never seen
+    @model_required
+    @data_required
+    def evaluate(self):
+        # TODO: verify that this is still valid given generators
+        train_evaluation = self.model.evaluate(self.train_data)
+        test_evaluation = self.model.evaluate(self.test_data)
+
+        # a string of some convenient evaluation data
+        evaluation_str = '''
+        Evaluation:
+            Train\t-\t{0}\t- {1:.3f}
+            Test\t-\t{2}\t- {3:.3f}
+            Overfit\t-\t{4}
+            {5}
+        '''.format(
+            self.model.metrics_names[1].capitalize(),
+            train_evaluation[1],
+            self.model.metrics_names[1].capitalize(),
+            test_evaluation[1],
+            train_evaluation[1] - test_evaluation[1] <= 0,
+            d.now().strftime('%A, %B %-d, %Y - %H:%M:%S')
+        )
+
+        self.evaluation = test_evaluation[1]
+
+        print(evaluation_str)
+
+    # method for predicting on an input data piece
+    # TODO: modify for actually working, duh
+    @model_required
+    def predict(self, raw_input, batch_size=1, steps=1):
+        model_type = self.model_type
+
+        try:
+            self.prediction = None #self.model.predict(converted_sequence, batch_size=batch_size, verbose=3)
+            print('[+] Prediction successfully completed')
+
+        except ValueError as err:
+            print('[-] Prediction failed, please check the input shape:')
+            print(err)
+            
+    # method for saving the model to file
+    @model_required
+    def save(self, save_path='Model_{}'.format(d.now().strftime('%A%B%-d%Y%H%M%S'))):
+        try:
+            self.model.save(save_path + '.h5')
+            print('[+] Model successfully saved to "{}"'.format(os.path.abspath(save_path)))
+
+        except Exception as err:
+            print('[-] Model could not be saved:')
+            print(err)
+ 

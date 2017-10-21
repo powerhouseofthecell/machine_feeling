@@ -76,7 +76,6 @@ class Model():
         if os.path.isdir(data_path) and os.path.isdir(data_path + '/train/') and os.path.isdir(data_path + '/test/'):
             if data_type == 'img':
                 # for images, we can increase the size/variety of our data set using generators, courtesy of Keras
-                # TODO: pull these params from config
                 train_gen = ImageDataGenerator(
                     rotation_range=rot_range,
                     width_shift_range=w_shift,
@@ -114,7 +113,6 @@ class Model():
             print('[-] The path provided is not a folder containing "train" and "test" or does not exist, please try again.')
     
     # method for building the actual model
-    # TODO: build from vars pulled from config if they exist, else default
     def build_model(self):
         # define the model type, from Keras
         model = Sequential()
@@ -162,7 +160,6 @@ class Model():
             fit_start = d.now()
 
             # fit the model to the data
-            # TODO: modify for images, and possibly config?
             self.model.fit_generator(
                 self.train_data,
                 steps_per_epoch=step_num // batch_size,

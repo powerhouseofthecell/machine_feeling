@@ -1,0 +1,2 @@
+# The Code :hushed:
+Here it is, the code you've been looking to get your hands on. Before you dive in, just know that the sample code is functional - running run.py from the sample/ directory will deliver a product...that may or may not work well. However, if you don't want to spoil the fun, go ahead and look in skeleton :skull: directory, and try to figure out some of the puzzles yourself!

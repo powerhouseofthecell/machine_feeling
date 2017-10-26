@@ -91,7 +91,7 @@ def save_model():
     
     # check with the user and see if they want to save
     while not (ans == 'y' or ans == 'n'):
-        ans = input('Do you want to save the model? (y/N)').lower()
+        ans = input('Do you want to save the model? (y/N) ').lower()
 
     if ans == 'y':
         m.save(save_path=args['output'])
@@ -135,7 +135,8 @@ if __name__ == '__main__':
 
     predict()
 
-    print(m.prediction)
+    for k in m.prediction:
+        print('It is {} with {}% likelihood!'.format(k, 100 * m.prediction[k]))
 
 
 

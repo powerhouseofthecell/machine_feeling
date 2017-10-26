@@ -69,7 +69,7 @@ class Model():
                 if os.path.isfile(model_path):
                     self.model = load_model(model_path)
                     print('[+] Model loading complete')
-                    
+
                 else:
                     print('[-] Model loading incomplete, could not find model - {}'.format(model_path))
 
@@ -147,8 +147,6 @@ class Model():
         # define the model type, from Keras
         model = Sequential()
 
-        # TODO: modify to make parsimonious
-        # TODO: modify to allow for config use
         if self.model_type == 'mul_class':
             model.add(Conv2D(
                 32,

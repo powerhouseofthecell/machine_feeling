@@ -135,6 +135,7 @@ class Model():
 
             model.add(Dropout(0.7))
 
+            # modify this to be the number of classes found
             model.add(Dense(3, activation=activations[-1]))
 
             # a "begin" marker to time how long it takes (in real time) to compile
@@ -156,9 +157,10 @@ class Model():
 
 
     # a method for actually training the model on the supplied data
+    # TODO: maybe allow override of config stuff?
     @model_required
     @data_required
-    def train(self, r_params=False):
+    def train(self):
         try:
             # again, a variable for timing
             fit_start = d.now()

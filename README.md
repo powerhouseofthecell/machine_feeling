@@ -30,6 +30,9 @@ The problem herein is that we want to be able to identify whether the emoji we s
 - The rest is as easy as installing the requirements with ```pip install -r requirements.txt```
 - Then, navigate to the directory containing run (assuming you're in the machine_feeling/ directory, ```cd src; cd sample``` and run "run.py" ```./run.py -h```
   - If you receive a message about your ability to run that file, go ahead and change the permissions ```chmod +x run.py``` and you should be able to run it
+- PLEASE NOTE, DUE TO A BUG WITH KERAS, YOU WILL LIKELY GET AN ERROR ABOUT SUBTRACTION AND NEGATIVE SIZES:
+  - the way I recommend is modifying the file at ```~/.keras/keras.json``` where it reads ```"image_dim_ordering": "something here"```, and change that row to read ```"image_dim_ordering": "tf"```
+- YOU MAY ALSO GET AN ERROR ABOUT INPUT DIMENSIONS, IN WHICH CASE YOU SHOULD CHANGE THE MODEL SUCH THAT THE LAYERS PASS ON THE CORRECT DIMENSIONALITY TO THE LAYERS AFTER THEM
 
 ----- 
 

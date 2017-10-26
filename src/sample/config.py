@@ -64,3 +64,9 @@ step_num = 4000
 
 ## the number of rounds to run
 epoch_num = 15
+
+# number of workers to unleash on doing calculations
+worker_num = 1
+
+# whether or not to use multiprocessing
+multiprocessing = False

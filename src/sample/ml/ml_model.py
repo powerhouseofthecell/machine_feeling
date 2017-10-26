@@ -203,6 +203,8 @@ class Model():
                     epochs=epoch_num,
                     validation_data=self.test_data,
                     validation_steps=step_num // batch_size
+                    workers=worker_num,
+                    use_multiprocessing=multiprocessing
                 )
 
                 # another time calculation, but for fitting, in seconds

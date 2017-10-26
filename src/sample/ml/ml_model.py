@@ -126,16 +126,20 @@ class Model():
                 input_shape=(target_dim1, target_dim2, 3),
                 activation=activations[0]
             ))
-
             model.add(MaxPooling2D(pool_size=(2, 2)))
             
+            model.add(Conv2D(32, filter_dim, activation='relu'))
+            model.add(MaxPooling2D(pool_size=(2, 2)))
+
+            model.add(Conv2D(32, filter_dim, activation='relu'))
+            model.add(MaxPooling2D(pool_size=(2, 2)))
+
             model.add(Flatten())
 
             model.add(Dense(64, activation='relu'))
+            model.add(Dropout(0.5))
 
-            model.add(Dropout(0.7))
-
-            # modify this to be the number of classes found
+            # TODO: modify this to be the number of classes found
             model.add(Dense(3, activation=activations[-1]))
 
             # a "begin" marker to time how long it takes (in real time) to compile

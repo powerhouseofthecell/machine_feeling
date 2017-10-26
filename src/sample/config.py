@@ -27,8 +27,8 @@ v_flip = True
 
 # Data Parameters
 ## the dimensions of the images, rows then cols
-target_dim1 = 150
-target_dim2 = 150
+target_dim1 = 200
+target_dim2 = 200
 
 ## how many images to generate at a time
 batch_size = 100
@@ -48,7 +48,7 @@ filter_dim = (3, 3)
 l_type = classification_type + '_crossentropy'
 
 ## the optimizer, a tool for how weights are decided
-opt = 'adam'
+opt = 'rmsprop'
 
 ## the metrics against which things are judged, can be several
 met = ['accuracy']

@@ -19,6 +19,9 @@ from keras.models import Sequential, load_model
 from keras.layers import AlphaDropout, GaussianNoise, Conv2D, MaxPooling2D, Activation, Dropout, Flatten, Dense
 from keras import optimizers
 
+from keras.applications.inception_v3 import preprocess_input
+from keras.applications import imagenet_utils
+
 # import our configuration variables
 from config import *
 
@@ -58,30 +61,37 @@ class Model():
             )
 
     # a method for loading the model if it has already been created and saved
-    def load_model(self, model_path):
-        try:
-            if os.path.isfile(model_path):
-                self.model = load_model(model_path)
-                print('[+] Model loading complete')
+    def load_model(self, model_path, pretrained=False):
+        self.pretrained = pretrained
 
-                # a "begin" marker to time how long it takes (in real time) to compile
-                start_compile = d.now()
+        if not pretrained:   
+            try:
+                if os.path.isfile(model_path):
+                    self.model = load_model(model_path)
+                    print('[+] Model loading complete')
 
-                # actually compile the model
-                self.model.compile(
-                    loss=l_type,
-                    optimizer=opt,
-                    metrics=met
-                )
+            except Exception as err:
+                print('[-] Model loading unsuccessful, please check your model file:')
+                print(err)
+        else:
+            from keras.applications import InceptionV3
+            self.model = InceptionV3(weights='imagenet')
 
-                # a calculation of the compile time, in seconds
-                compile_time = (d.now() - start_compile).total_seconds()
+        # a "begin" marker to time how long it takes (in real time) to compile
+        start_compile = d.now()
 
-                print('[+] Model successfully compiled in {:.3f} seconds'.format(compile_time))
+        # actually compile the model
+        self.model.compile(
+            loss=l_type,
+            optimizer=opt,
+            metrics=met
+        )
 
-        except Exception as err:
-            print('[-] Model loading unsuccessful, please check your model file:')
-            print(err)
+        # a calculation of the compile time, in seconds
+        compile_time = (d.now() - start_compile).total_seconds()
+
+        print('[+] Model successfully compiled in {:.3f} seconds'.format(compile_time))
+
 
     # a method for loading in the data given path (and many optional arguments)
     # note, this data path should point to a folder with the data
@@ -129,6 +139,8 @@ class Model():
     
     # method for building the actual model
     def build_model(self, r_params=False):
+        self.pretrained = False
+
         # define the model type, from Keras
         model = Sequential()
 
@@ -185,41 +197,59 @@ class Model():
     @model_required
     @data_required
     def train(self):
-        try:
-            # again, a variable for timing
-            fit_start = d.now()
+        # we cannot train a pretrained model on our dataset
+        if not self.pretrained:
+            try:
+                # again, a variable for timing
+                fit_start = d.now()
 
-            # fit the model to the data
-            self.model.fit_generator(
-                self.train_data,
-                steps_per_epoch=step_num // batch_size,
-                epochs=epoch_num,
-                validation_data=self.test_data,
-                validation_steps=step_num // batch_size
-            )
+                # fit the model to the data
+                self.model.fit_generator(
+                    self.train_data,
+                    steps_per_epoch=step_num // batch_size,
+                    epochs=epoch_num,
+                    validation_data=self.test_data,
+                    validation_steps=step_num // batch_size
+                )
 
-            # another time calculation, but for fitting, in seconds
-            fit_time = (d.now() - fit_start).total_seconds() / 60
+                # another time calculation, but for fitting, in seconds
+                fit_time = (d.now() - fit_start).total_seconds() / 60
 
-            print('[+] Training completed in {:.3f} minutes'.format(fit_time))
+                print('[+] Training completed in {:.3f} minutes'.format(fit_time))
 
-        except KeyboardInterrupt:
-            print('User aborted...')
+            except KeyboardInterrupt:
+                print('\nUser aborted...')
 
     # method for predicting on an input data piece
-    # TODO: modify for actually working, duh
     @model_required
-    def predict(self, raw_input, batch_size=1, steps=1):
-        model_type = self.model_type
+    def predict(self, raw_input):
+        if not self.pretrained:
+            model_type = self.model_type
 
-        try:
-            self.prediction = self.model.predict(raw_input, batch_size=batch_size) #self.model.predict(converted_sequence, batch_size=batch_size, verbose=3)
-            print('[+] Prediction successfully completed')
-            return self.prediction
+            try:
+                self.prediction = self.model.predict(raw_input)
+                print('[+] Prediction successfully completed')
+                return self.prediction
 
-        except ValueError as err:
-            print('[-] Prediction failed, please check the input shape:')
-            print(err)
+            except ValueError as err:
+                print('[-] Prediction failed, please check the input shape:')
+                print(err)
+        else:
+            # preprocess the image for the pretrained net
+            image = preprocess_input(raw_input)
+
+            # make predictions
+            prediction = self.model.predict(image)
+            preds = imagenet_utils.decode_predictions(prediction)
+
+            # create a dictionary to store the top five predictions with their probabilities
+            p = dict()
+            for (i, (imagenetID, label, prob)) in enumerate(preds[0]):
+                p[label] = prob
+
+            return p
+
+
             
     # method for saving the model to file
     @model_required

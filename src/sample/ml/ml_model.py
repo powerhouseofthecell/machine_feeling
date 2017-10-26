@@ -1,6 +1,4 @@
 import os
-import numpy as np
-import pandas as pd
 from datetime import datetime as d
 
 #######################################################################
@@ -12,13 +10,13 @@ from datetime import datetime as d
 #### interface. If there are things you wish to modify, feel free. ####
 #######################################################################
 
-# will hide TF warnings, comment or remove to have those warnings back
+# will hide TensorFlow warnings, comment or remove to have those warnings back
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 # import the pieces from keras to make the model work
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential, load_model
-from keras.layers import Dense, Dropout, AlphaDropout, GaussianNoise, LSTM
+from keras.layers import AlphaDropout, GaussianNoise, Conv2D, MaxPooling2D, Activation, Dropout, Flatten, Dense
 from keras import optimizers
 
 # import our configuration variables
@@ -36,7 +34,7 @@ def model_required(f):
 # also a decorator, makes sure we don't try to train a model without data
 def data_required(f):
     def wrapper(*args, **kwargs):
-        if args[0].train_input.all() and args[0].test_input.all() and args[0].train_ans.all() and args[0].test_ans.all():
+        if args[0].loaded:
             f(*args, **kwargs)
         else:
             print('[-] Please load data using the "load_data" method before attempting this')
@@ -44,10 +42,11 @@ def data_required(f):
 
 # the class definition
 class Model():
-    # initialization of the class object
+    # initialization of the class object, defaults to a multi-class classifier
     def __init__(self, model_type='mul_class'):
         self.model_type = model_type
         self.model = None
+        self.loaded = False
 
         # if the selected model is not available, say as much
         if not model_type in available_model_types:
@@ -105,6 +104,7 @@ class Model():
                 )
 
                 print('[+] Data successfully loaded')
+                self.loaded = True
 
             else:
                 print('[-] Datatype {} not yet supported.'.format(str(data_type)))
@@ -113,26 +113,30 @@ class Model():
             print('[-] The path provided is not a folder containing "train" and "test" or does not exist, please try again.')
     
     # method for building the actual model
-    def build_model(self):
+    def build_model(self, r_params=False):
         # define the model type, from Keras
         model = Sequential()
 
         # TODO: modify to make parsimonious
         # TODO: modify to allow for config use
         if self.model_type == 'mul_class':
-            model.add(Conv2D(32, filter_dim, input_shape=(target_dim1, target_dim2, 3)))
-            model.add(Activation(input_activation))
+            model.add(Conv2D(
+                32,
+                filter_dim,
+                input_shape=(target_dim1, target_dim2, 3),
+                activation=activations[0]
+            ))
+
             model.add(MaxPooling2D(pool_size=(2, 2)))
             
             model.add(Flatten())
 
-            model.add(Dense(64))
-            model.add(Activation('relu'))
+            model.add(Dense(64, activation='relu'))
+
             model.add(Dropout(0.7))
 
-            model.add(Dense(1))
-	        model.add(Activation(output_activation))
-        
+            model.add(Dense(3, activation=activations[-1]))
+
             # a "begin" marker to time how long it takes (in real time) to compile
             start_compile = d.now()
 
@@ -154,7 +158,7 @@ class Model():
     # a method for actually training the model on the supplied data
     @model_required
     @data_required
-    def train(self):
+    def train(self, r_params=False):
         try:
             # again, a variable for timing
             fit_start = d.now()
@@ -176,34 +180,6 @@ class Model():
         except KeyboardInterrupt:
             print('User aborted...')
 
-    # a method for evaulating the model on data, using a subset of original data that was never seen
-    @model_required
-    @data_required
-    def evaluate(self):
-        # TODO: verify that this is still valid given generators
-        train_evaluation = self.model.evaluate(self.train_data)
-        test_evaluation = self.model.evaluate(self.test_data)
-
-        # a string of some convenient evaluation data
-        evaluation_str = '''
-        Evaluation:
-            Train\t-\t{0}\t- {1:.3f}
-            Test\t-\t{2}\t- {3:.3f}
-            Overfit\t-\t{4}
-            {5}
-        '''.format(
-            self.model.metrics_names[1].capitalize(),
-            train_evaluation[1],
-            self.model.metrics_names[1].capitalize(),
-            test_evaluation[1],
-            train_evaluation[1] - test_evaluation[1] <= 0,
-            d.now().strftime('%A, %B %-d, %Y - %H:%M:%S')
-        )
-
-        self.evaluation = test_evaluation[1]
-
-        print(evaluation_str)
-
     # method for predicting on an input data piece
     # TODO: modify for actually working, duh
     @model_required
@@ -211,8 +187,9 @@ class Model():
         model_type = self.model_type
 
         try:
-            self.prediction = None #self.model.predict(converted_sequence, batch_size=batch_size, verbose=3)
+            self.prediction = self.model.predict(raw_input, batch_size=batch_size) #self.model.predict(converted_sequence, batch_size=batch_size, verbose=3)
             print('[+] Prediction successfully completed')
+            return self.prediction
 
         except ValueError as err:
             print('[-] Prediction failed, please check the input shape:')

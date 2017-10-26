@@ -102,3 +102,4 @@ ENV/
 
 # custom ignore
 .vscode/
+data/

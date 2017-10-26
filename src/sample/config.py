@@ -2,8 +2,7 @@
 ################ CONFIG ####################
 ############################################
 # this file holds all of the configuration #
-# variables for the machine learning       #
-# aspect of this project                   #
+# variables for this project.              #
 ############################################
 ############################################
 ############################################
@@ -38,9 +37,8 @@ batch_size = 100
 classification_type = 'categorical'
 
 # Model Parameters
-## activation distributions for the first and last layers
-input_activation = 'relu'
-output_activation = 'sigmoid'
+## activation distributions for the layers
+activations = ['relu', 'sigmoid']
 
 ## dimensionality of a filter to be run over the image
 filter_dim = (3, 3)
@@ -61,4 +59,3 @@ step_num = 600
 
 ## the number of rounds to run
 epoch_num = 10
-

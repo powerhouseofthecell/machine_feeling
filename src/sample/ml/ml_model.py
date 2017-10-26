@@ -69,6 +69,9 @@ class Model():
                 if os.path.isfile(model_path):
                     self.model = load_model(model_path)
                     print('[+] Model loading complete')
+                    
+                else:
+                    print('[-] Model loading incomplete, could not find model - {}'.format(model_path))
 
             except Exception as err:
                 print('[-] Model loading unsuccessful, please check your model file:')
@@ -223,32 +226,45 @@ class Model():
     # method for predicting on an input data piece
     @model_required
     def predict(self, raw_input):
-        if not self.pretrained:
-            model_type = self.model_type
+        try:
+            if not self.pretrained:
 
-            try:
-                self.prediction = self.model.predict(raw_input)
+                pred = self.model.predict(raw_input)
+
+                # get the list of labels
+                labels = listdir('data/train')
+
+                # remove hidden files from the labels list
+                while labels[0].startswith('.'):
+                    labels.pop(0)
+
+                # initialize a dictionary for storing label to probability mappings
+                pmap = dict()
+                for i in range(len(labels)):
+                    pmap[labels[i]] = list(pred[0])[i]
+                
+                self.prediction = pmap
                 print('[+] Prediction successfully completed')
-                return self.prediction
 
-            except ValueError as err:
-                print('[-] Prediction failed, please check the input shape:')
-                print(err)
-        else:
-            # preprocess the image for the pretrained net
-            image = preprocess_input(raw_input)
+            else:
+                # preprocess the image for the pretrained net
+                image = preprocess_input(raw_input)
 
-            # make predictions
-            prediction = self.model.predict(image)
-            preds = imagenet_utils.decode_predictions(prediction)
+                # make predictions
+                prediction = self.model.predict(image)
+                preds = imagenet_utils.decode_predictions(prediction)
 
-            # create a dictionary to store the top five predictions with their probabilities
-            p = dict()
-            for (i, (imagenetID, label, prob)) in enumerate(preds[0]):
-                p[label] = prob
+                # create a dictionary to store the top five predictions with their probabilities
+                p = dict()
+                for (i, (imagenetID, label, prob)) in enumerate(preds[0]):
+                    p[label] = prob
 
-            return p
+                self.prediction = p
+                print('[+] Prediction successfully completed')
 
+        except ValueError as err:
+            print('[-] Prediction failed, please check the input shape:')
+            print(err)
 
             
     # method for saving the model to file

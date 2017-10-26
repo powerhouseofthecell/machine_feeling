@@ -64,7 +64,7 @@ def click_and_crop(event, x, y, flags, param):
     # if we have two coordinates
     if len(coors) == 2 and not is_clicked:
         # take the selection and write it to file
-        cv2.imwrite('test.png', img[coors[0][1]:coors[1][1], coors[0][0]:coors[1][0]])
+        cv2.imwrite(filename + '.png', img[coors[0][1]:coors[1][1], coors[0][0]:coors[1][0]])
         
         # stop looping
         loop = False

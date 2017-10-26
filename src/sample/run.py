@@ -2,6 +2,7 @@
 
 import argparse
 from os.path import isfile
+from os import remove, listdir
 
 # initialize an argument parser
 ap = argparse.ArgumentParser()
@@ -95,6 +96,33 @@ def save_model():
     if ans == 'y':
         m.save(save_path=args['output'])
 
+def run_im_capture():
+    # import computer vision after the machine learning has gone well
+    import cv.im_capture as im
+
+    # runs the image capture and lets you save the screenshot
+    im.run(filepath=args['img'])
+    
+
+def predict():
+    # we need some extra steps
+    from keras.preprocessing.image import img_to_array, load_img
+    from config import target_dim1, target_dim2
+    import numpy as np
+
+    # if the image exists, and we're using a pretrained model
+    if isfile(args['img'] + '.png') and args['pretrained']:
+        image = load_img(args['img'] + '.png', target_size=(299, 299))
+
+    elif isfile(args['img'] + '.png'):
+        image = load_img(args['img'] + '.png', target_size=(target_dim1, target_dim2))
+
+    image = img_to_array(image)
+    image = np.expand_dims(image, axis=0)
+
+    m.predict(image)
+    remove(args['img'] + '.png')
+
 # run the actual file
 if __name__ == '__main__':
     initialize()
@@ -103,19 +131,12 @@ if __name__ == '__main__':
 
     save_model()
 
-    # import computer vision after the machine learning has gone well
-    import cv.im_capture as im
+    run_im_capture()
 
-    # runs the image capture and lets you save the screenshot
-    im.run(filepath=args['img'])
+    predict()
+
+    print(m.prediction)
+
+
+
     
-    if isfile(args['img'] + '.png'):
-        print('success')
-    # TODO: have the machine predict on image
-    # TODO: print the prediction
-    try:
-        pass
-
-    except KeyboardInterrupt:
-        print('[+] Good bye!')
-        exit(0)

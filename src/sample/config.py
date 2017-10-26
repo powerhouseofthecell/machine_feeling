@@ -18,13 +18,13 @@ rot_range = 0
 
 ## how much to shift the width and height, as proportions
 w_shift = 0.2
-h_shift = 0.2
+h_shift = 0.1
 
 ## how much to shear images (see Internet for specifics)
-shear = 0.02
+shear = 0.01
 
 ## horizontal and vertical flipping of images
-h_flip = True
+h_flip = False
 v_flip = False
 
 # Data Parameters
@@ -63,4 +63,4 @@ met = ['accuracy']
 step_num = 4000
 
 ## the number of rounds to run
-epoch_num = 10
+epoch_num = 15

@@ -157,34 +157,15 @@ class Model():
             model.add(MaxPooling2D(pool_size=(2, 2)))
             model.add(Dropout(0.2))
             
-            model.add(Conv2D(64, filter_dim, activation='relu'))
-            model.add(MaxPooling2D(pool_size=(2, 2)))
-            model.add(Dropout(0.2))
-
-            model.add(Conv2D(64, filter_dim, activation='relu'))
-            model.add(MaxPooling2D(pool_size=(2, 2)))
-            model.add(Dropout(0.2))
-            model.add(Conv2D(64, filter_dim, activation='relu'))
-            model.add(MaxPooling2D(pool_size=(2, 2)))
-            model.add(Dropout(0.2))
-            model.add(Conv2D(64, filter_dim, activation='relu'))
-            model.add(MaxPooling2D(pool_size=(2, 2)))
-            model.add(Dropout(0.2))
-
-            model.add(Conv2D(128, filter_dim, activation='relu'))
-            model.add(Dropout(0.2))
             model.add(Conv2D(128, filter_dim, activation='relu'))
             model.add(MaxPooling2D(pool_size=(2, 2)))
             model.add(Dropout(0.2))
 
             model.add(Flatten())
 
-            model.add(Dense(512, activation='relu'))
-            model.add(Dropout(0.3))
-            model.add(Dense(512, activation='relu'))
+            model.add(Dense(256, activation='relu'))
             model.add(Dropout(0.3))
 
-            # TODO: modify this to be the number of classes found
             model.add(Dense(num_classes, activation=activations[-1]))
 
             # a "begin" marker to time how long it takes (in real time) to compile

@@ -25,6 +25,14 @@ The problem herein is that we want to be able to identify whether the emoji we s
 
 -----
 
+### To Get Started
+- First, I would recommend using some form of dedicated environment, as with virtualenv, but if you don't wish to, that's ok too
+- The rest is as easy as installing the requirements with ```pip install -r requirements.txt```
+- Then, navigate to the directory containing run (assuming you're in the machine_feeling/ directory, ```cd src; cd sample``` and run "run.py" ```./run.py -h```
+  - If you receive a message about your ability to run that file, go ahead and change the permissions ```chmod +x run.py``` and you should be able to run it
+
+----- 
+
 ### Conclusion :heart:
 We sincerely hope that you enjoy working through this project and go on to pursue your interest in both machine learning and computer vision!
 

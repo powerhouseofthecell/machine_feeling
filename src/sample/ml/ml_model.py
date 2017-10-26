@@ -127,20 +127,25 @@ class Model():
                 activation=activations[0]
             ))
             model.add(MaxPooling2D(pool_size=(2, 2)))
+            model.add(Dropout(0.2))
             
-            model.add(Conv2D(32, filter_dim, activation='relu'))
+            model.add(Conv2D(64, filter_dim, activation='relu'))
             model.add(MaxPooling2D(pool_size=(2, 2)))
+            model.add(Dropout(0.2))
 
-            model.add(Conv2D(32, filter_dim, activation='relu'))
+            model.add(Conv2D(128, filter_dim, activation='relu'))
+            model.add(Conv2D(128, filter_dim, activation='relu'))
+            model.add(Conv2D(128, filter_dim, activation='relu'))
             model.add(MaxPooling2D(pool_size=(2, 2)))
+            model.add(Dropout(0.2))
 
             model.add(Flatten())
 
-            model.add(Dense(64, activation='relu'))
-            model.add(Dropout(0.5))
+            model.add(Dense(512, activation='relu'))
+            model.add(Dropout(0.3))
 
             # TODO: modify this to be the number of classes found
-            model.add(Dense(3, activation=activations[-1]))
+            model.add(Dense(num_classes, activation=activations[-1]))
 
             # a "begin" marker to time how long it takes (in real time) to compile
             start_compile = d.now()
@@ -203,7 +208,9 @@ class Model():
             
     # method for saving the model to file
     @model_required
-    def save(self, save_path='Model_{}'.format(d.now().strftime('%A%B%-d%Y%H%M%S'))):
+    def save(self, save_path=None):
+        if not save_path:
+            save_path = 'Model_{}'.format(d.now().strftime('%A%B%-d%Y%H%M%S'))
         try:
             self.model.save(save_path + '.h5')
             print('[+] Model successfully saved to "{}"'.format(os.path.abspath(save_path)))

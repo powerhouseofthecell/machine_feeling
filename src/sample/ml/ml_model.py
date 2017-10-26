@@ -28,7 +28,7 @@ def model_required(f):
         if args[0].model:
             f(*args, **kwargs)
         else:
-            print('[-] Please compile the model using the "build_model" method before attempting this')
+            print('[-] Please compile the model using the "build_model" method or load a model before attempting this')
     return wrapper
 
 # also a decorator, makes sure we don't try to train a model without data
@@ -63,6 +63,21 @@ class Model():
             if os.path.isfile(model_path):
                 self.model = load_model(model_path)
                 print('[+] Model loading complete')
+
+                # a "begin" marker to time how long it takes (in real time) to compile
+                start_compile = d.now()
+
+                # actually compile the model
+                self.model.compile(
+                    loss=l_type,
+                    optimizer=opt,
+                    metrics=met
+                )
+
+                # a calculation of the compile time, in seconds
+                compile_time = (d.now() - start_compile).total_seconds()
+
+                print('[+] Model successfully compiled in {:.3f} seconds'.format(compile_time))
 
         except Exception as err:
             print('[-] Model loading unsuccessful, please check your model file:')

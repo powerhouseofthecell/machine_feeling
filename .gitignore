@@ -103,3 +103,4 @@ ENV/
 # custom ignore
 .vscode/
 data/
+*.h5

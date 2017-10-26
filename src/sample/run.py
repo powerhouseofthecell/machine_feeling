@@ -24,6 +24,19 @@ ap.add_argument(
     help='the number of rounds of training to undergo'
 )
 
+# add an argument for loading in a model
+ap.add_argument(
+    '-l',
+    '--load',
+    metavar='LOAD',
+    type=str,
+    help='the filepath of an existing model which you want to load'
+)
+
+# add an argument for if you've loaded a model, still training it again
+ap.add_argument('-t', action='store_true')
+
+# add an argument for automatically saving the model
 ap.add_argument('-y', action='store_true')
 
 args = vars(ap.parse_args())
@@ -37,12 +50,18 @@ m = Model()
 # get the model built and ready to go
 def initialize():
     m.load_data('data')
-    m.build_model()
+
+    if not args['load']:
+        m.build_model()
+    else:
+        m.load_model(args['load'])
 
 # train the model n rounds
 def train_model(n):
-    for i in range(n):
-        m.train()
+    # only train if forced or if nothing was loaded
+    if args['t'] or not args['load']:
+        for i in range(n):
+            m.train()  
 
 # save the model
 def save_model():

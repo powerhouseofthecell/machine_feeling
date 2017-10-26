@@ -154,18 +154,17 @@ class Model():
                 input_shape=(target_dim1, target_dim2, 3),
                 activation=activations[0]
             ))
+
+            ## mid layers of our model, where a lot of our tinkering will occur
             model.add(MaxPooling2D(pool_size=(2, 2)))
-            model.add(Dropout(0.2))
-            
-            model.add(Conv2D(128, filter_dim, activation='relu'))
-            model.add(MaxPooling2D(pool_size=(2, 2)))
-            model.add(Dropout(0.2))
+            model.add(Dropout(0.5))
 
             model.add(Flatten())
 
-            model.add(Dense(256, activation='relu'))
-            model.add(Dropout(0.3))
+            model.add(Dense(16, activation='relu'))
+            model.add(Dropout(0.5))
 
+            # final layer of the model, outputs actual classification
             model.add(Dense(num_classes, activation=activations[-1]))
 
             # a "begin" marker to time how long it takes (in real time) to compile

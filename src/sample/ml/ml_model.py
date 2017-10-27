@@ -259,6 +259,31 @@ class Model():
             print(err)
 
             
+
+    # method for evaluating the model
+    @model_required
+    @data_required
+    def evaluate(self, steps=eval_steps):
+        try:
+            print('[+] Beginning evaluation of model...')
+
+            # begin timer for checking evaluation speed
+            eval_start = d.now()
+
+            if not self.pretrained:
+                evaln = self.model.evaluate_generator(self.test_data, steps)
+
+                self.evaluation = dict()
+                for i in range(len(self.model.metrics_names)):
+                    self.evaluation[self.model.metrics_names[i]] = evaln[i]
+            
+            # another time calculation, but for evaluating, in seconds
+            eval_time = (d.now() - eval_start).total_seconds() / 60
+
+            print('[+] Evaluation successful! ({} seconds)'.format(eval_time))
+        except RuntimeError:
+            print('[-] Evaluation of the model failed - check that it was compiled')
+
     # method for saving the model to file
     @model_required
     def save(self, save_path=None):

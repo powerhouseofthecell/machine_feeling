@@ -105,7 +105,7 @@ def run_im_capture():
     
 
 def predict():
-    # we need some extra steps
+    # we need some extra packages
     from keras.preprocessing.image import img_to_array, load_img
     from config import target_dim1, target_dim2
     import numpy as np
@@ -117,12 +117,24 @@ def predict():
     elif isfile(args['img'] + '.png'):
         image = load_img(args['img'] + '.png', target_size=(target_dim1, target_dim2))
 
+    # convert the image to a proper numpy array
     image = img_to_array(image)
+
+    # add a dimension to this array so that it fits what our model expects
     image = np.expand_dims(image, axis=0)
 
+    # actually run the prediction
     m.predict(image)
+
+    # remove the temporary file we created
     remove(args['img'] + '.png')
 
+# a method for actually evaluating the model
+def evaluate():
+    m.evaluate()
+    return m.evaluation
+
+# TODO: Make this into some form of loop for interacting live with the model, a la an interpreter
 # run the actual file
 if __name__ == '__main__':
     initialize()
@@ -138,6 +150,13 @@ if __name__ == '__main__':
     for k in m.prediction:
         print('It is {} with {}% likelihood!'.format(k, 100 * m.prediction[k]))
 
+    # single letter variable names seemed apropos here, may need to change later
+    e = evaluate()
+
+    print('On evaluation, metrics were as follows:')
+    for k in e:
+        print('\t{}: {}'.format(k, e[k] * 100))
+        
 
 
     

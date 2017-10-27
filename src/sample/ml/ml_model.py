@@ -202,7 +202,7 @@ class Model():
                     steps_per_epoch=step_num // batch_size,
                     epochs=epoch_num,
                     validation_data=self.test_data,
-                    validation_steps=step_num // batch_size
+                    validation_steps=step_num // batch_size,
                     workers=worker_num,
                     use_multiprocessing=multiprocessing
                 )

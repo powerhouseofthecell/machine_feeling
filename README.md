@@ -33,6 +33,7 @@ The problem herein is that we want to be able to identify whether the emoji we s
 - PLEASE NOTE, DUE TO A BUG WITH KERAS, YOU WILL LIKELY GET AN ERROR ABOUT SUBTRACTION AND NEGATIVE SIZES:
   - the way I recommend is modifying the file at ```~/.keras/keras.json``` where it reads ```"image_dim_ordering": "something here"```, and change that row to read ```"image_dim_ordering": "tf"```
 - YOU MAY ALSO GET AN ERROR ABOUT INPUT DIMENSIONS, IN WHICH CASE YOU SHOULD CHANGE THE MODEL SUCH THAT THE LAYERS PASS ON THE CORRECT DIMENSIONALITY TO THE LAYERS AFTER THEM
+- All bugs should be fixed for distro code, please do let me know if anything doesn't work!
 
 ----- 
 
